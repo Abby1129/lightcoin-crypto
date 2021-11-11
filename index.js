@@ -1,29 +1,75 @@
-let balance = 500.00;
+// let balance = 500;
+class Account {
+  constructor(username) {
+    this.username = username;
+    this.transactions = [];
+  }
+  get balance() {
+    let balance = 0;
+    for (let transaction of this.transactions) {
+      balance = balance + transaction.value;
+    }
+    return balance;
+  }
 
-class Withdrawal {
+  addTransaction(transaction) {
+    this.transactions.push(transaction);
+  }
+}
 
-  constructor(amount) {
+class Transaction {
+  constructor(amount, account) {
     this.amount = amount;
+    this.account = account;
   }
 
   commit() {
-    balance -= this.amount;
+    if (!this.isAllowed()) return false;
+    // Keep track of the time of the transaction
+    this.time = new Date();
+    // Add the transaction to the account
+    this.account.addTransaction(this);
+    return true;
   }
-
 }
 
+class Deposit extends Transaction {
+  get value() {
+    return this.amount;
+  }
+  isAllowed() {
+    return true;
+  }
+}
 
+class Withdrawal extends Transaction {
+  get value() {
+    return -this.amount;
+  }
 
+  isAllowed() {
+    return this.account.balance - this.amount >= 0;
+  }
+}
 
 // DRIVER CODE BELOW
 // We use the code below to "drive" the application logic above and make sure it's working as expected
 
-t1 = new Withdrawal(50.25);
-t1.commit();
-console.log('Transaction 1:', t1);
+const myAccount = new Account("Billy Jean");
 
-t2 = new Withdrawal(9.99);
-t2.commit();
-console.log('Transaction 2:', t2);
+console.log("Starting Balance: ", myAccount.balance);
 
-console.log('Balance:', balance);
+const t1 = new Withdrawal(1.0, myAccount);
+console.log("Withdraw $1:", t1.commit());
+console.log("Account Balance: ", myAccount.balance);
+
+const t2 = new Deposit(10, myAccount);
+console.log("Deposit $10:", t2.commit());
+console.log("Account Balance: ", myAccount.balance);
+
+const t3 = new Withdrawal(5, myAccount);
+console.log("Withdraw $5:", t3.commit());
+
+console.log("Ending Balance: ", myAccount.balance);
+
+console.log("Account Transaction History: ", myAccount.transactions);
